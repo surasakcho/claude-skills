@@ -23,6 +23,18 @@ These come after `t2i_prompts.txt` is finalized against real kept images — ani
 - Map each clip's target duration from the locked script (Hook/Twist/Trap timing), so nothing needs re-cutting after generation.
 - If a shot is built to loop (e.g. an "idle" shot holding a full script beat alone), say so explicitly and ask for continuous motion with no readable start/end point.
 - Flag the known fallback up front rather than waiting for a failure: if a tool can't keep HUD text stable no matter how the prompt is phrased, the fix is animating a HUD-stripped background/character and compositing the static text back on top in the video pipeline (the same way captions get burned in), not endless prompt iteration.
+- Tell the user not to worry about ambient sound/music the animation tool bakes into the clip, if the pipeline strips clip audio and rebuilds the soundtrack from narration + music + SFX separately (check the actual pipeline code, e.g. `stitch`'s `audio=False`, before asserting this — don't assume it's true of every pipeline).
+
+### Google Flow specifics (as of this skill's writing — verify against the actual current UI before asserting anything, since generative-video tool UIs change fast)
+
+- **Frames vs. Ingredients input mode:** use Frames (single start image) for animating an already-locked, fully-composed shot. Ingredients is for combining multiple separate reference images into a new composition — wrong mode once the shot is already locked.
+- **End frame:** leave blank for ordinary subtle-motion shots. Two legitimate uses for setting it: (a) a shot that needs to loop seamlessly (same image as start and end frame helps it return to the same state), and (b) as a fallback if on-screen text keeps drifting despite the prompt instruction — a matching end frame is an explicit image-based constraint, stronger than a text instruction alone.
+- **Aspect ratio/resolution:** set portrait/9:16 at generation time to match the pipeline's target export dimensions directly, rather than relying on a center-crop step to fix a mismatched source. Download the highest resolution available (even above the pipeline's target) — downscaling is clean, upscaling from below-target resolution blurs fine detail, which is worst-case on any shot with on-screen text.
+- **Model/quality tier selection:** don't assert specific current model names/tiers/behaviors from training data — ask the user what's listed in their UI right now. As a general decision framework: bias toward the highest-quality tier for shots carrying on-screen text or other high-stakes locked detail; cheaper/faster tiers are more reasonable for simple atmosphere shots with no text and lower failure cost. Mixing tiers across a short's clips has a real tradeoff (cost savings vs. potentially visible inconsistency in motion quality between clips) — worth naming explicitly rather than picking silently.
+
+## Per-clip duration and SFX manifests
+
+If the build pipeline supports it (check for a `clip_durations.txt`/`sfx.txt`-style convention, or propose adding one), don't let a script's differentiated Hook/Twist/Trap timing silently degrade into an even split across clips — verify the actual stitching code respects per-clip durations, not just total duration. Similarly, keep SFX timing decoupled from the animation tool itself (SFX gets layered in the video pipeline in post, timed to each clip's actual start position in the final timeline) rather than trying to get the T2V tool to bake in specific sound effects, which is much harder to control precisely than a post-production audio layer.
 
 ## Reconciling prompt files against actual kept generations
 
