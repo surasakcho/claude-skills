@@ -179,6 +179,7 @@ General workflow tools, not code-specific.
 **Model-invoked**
 
 - **[grilling](./skills/productivity/grilling/SKILL.md)** — Interview the user relentlessly about a plan or design until every branch of the decision tree is resolved. The reusable loop behind `grill-me` and `grill-with-docs`.
+- **[wrap](./wrap/SKILL.md)** — End-of-session ritual: summarize the session, update whatever project logs already exist, then commit and push. Defers to a project's own `wrap` convention if its `CLAUDE.md` defines one.
 
 ### Misc
 
