@@ -1,6 +1,6 @@
 ---
 name: karpathy-guidelines
-description: Behavioral guidelines to reduce common LLM coding mistakes. Use when writing, reviewing, or refactoring code to avoid overcomplication, make surgical changes, surface assumptions, and define verifiable success criteria.
+description: Behavioral guidelines to reduce common LLM coding mistakes. Use when writing, reviewing, or refactoring code to avoid overcomplication, make surgical changes, surface assumptions, and define verifiable success criteria. Also covers syncing these guidelines into a project's own CLAUDE.md — see sync-claude-md.md — when the user asks to add/check/sync them there, or when a project's CLAUDE.md is in view and doesn't yet contain them.
 license: MIT
 ---
 
@@ -65,3 +65,9 @@ For multi-step tasks, state a brief plan:
 ```
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+## Syncing into a project's CLAUDE.md
+
+To check whether a project's own `CLAUDE.md` should have this text added (so it
+applies even without the skill being invoked), see
+[sync-claude-md.md](./sync-claude-md.md).
