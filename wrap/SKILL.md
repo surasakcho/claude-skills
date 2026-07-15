@@ -29,17 +29,17 @@ Do not invent a new log file just because none exists — that's the project own
 
 Stage the relevant files (never a blanket `git add -A`) and commit, following this repo's existing commit message style. Push to the current branch's upstream.
 
-## 6. Write handoff notes (always)
+## 6. Write and push handoff notes (always, as a separate commit)
 
 Ask the user: "Anything specific to note for next session?" If they give input, use it. If they say no or don't respond, write a brief note based on what you know needs doing next.
 
-Then follow the `handoff` skill exactly:
+Then, **before finishing**:
 - Find or create the handoff target file (`CONTEXT.md` → `HANDOFF.md` → `TODO.md`, in that order; create `HANDOFF.md` if none exist)
 - Add or update a `## Next Session` section with: what was done, what to do next, known bugs/blockers, suggested skills
 - Commit only the handoff file with message `docs: handoff notes for next session`
-- Push
+- **Push immediately** — this is a separate push from step 5; the handoff must reach the remote before the session ends
 
-Never write handoff notes to OS temp or claude memory — they must be in a committed, pushed file so they're available on any machine.
+Never write handoff notes to OS temp or claude memory. The session is not complete until this push succeeds.
 
 ## 7. Report back
 
