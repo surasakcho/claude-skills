@@ -66,6 +66,32 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+## 5. Commit After Verifying Major Changes
+
+**Don't let verified work sit uncommitted.**
+
+After completing and verifying a significant change:
+- Suggest a commit before moving on to the next task.
+- Don't batch unrelated changes into one commit.
+- A committed checkpoint is cheap; losing verified work is not.
+
+## 6. Suggest /compact Periodically
+
+**Long contexts degrade quality and waste tokens.**
+
+After approximately 20–50 prompts in a session:
+- Suggest the user run `/compact` to compress context.
+- Do this proactively — don't wait for slowdowns or errors.
+
+## 7. Python Environment Hygiene
+
+**Always use a virtual environment. Never pollute global Python.**
+
+At the start of any Python work:
+- Check for a `.venv` directory in the project root.
+- If missing, create one: `python -m venv .venv`
+- Always use `.venv` as the default interpreter for the session.
+
 ## Syncing into a project's CLAUDE.md
 
 To check whether a project's own `CLAUDE.md` should have this text added (so it
