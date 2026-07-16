@@ -1,23 +1,22 @@
 ---
 name: setup-status-line
-description: Configure Claude Code's status line to display model name, effort level, context window usage, and 5-hour/7-day rate limit usage with compact decimal reset countdowns (e.g. 5h:2% 0.2h|7d:13% 1.3d). Writes ~/.claude/statusline.sh and updates ~/.claude/settings.json automatically.
+description: Configure Claude Code's or Antigravity's status line to display model name, agent state, context window usage, and rate limits with reset countdowns, without progress bars (e.g. ctx 23% | 5h 12% r:2h3m | wk 4%).
 disable-model-invocation: true
 ---
 
 # Setup Status Line
 
-Write `~/.claude/statusline.sh` with the script below, make it executable, then update `~/.claude/settings.json` to wire it in.
+Configure the status line to display clean usage statistics without progress bars.
 
-**Note:** The script uses Python 3 (not `jq`) for JSON parsing — `jq` is often not installed.
+## For macOS/Linux (Bash)
 
-## Script to write at `~/.claude/statusline.sh`
+Write `~/.claude/statusline.sh` with the script below, make it executable, then update `~/.claude/settings.json`.
 
 ```bash
 #!/bin/bash
 input=$(cat)
 
 # Parse all fields via Python, semicolon-separated on one line.
-# Avoids IFS=$'\n' newline-collapse bug where empty fields (e.g. EFFORT) get skipped.
 IFS=';' read -r MODEL MODEL_ABBREV EFFORT CTX_PCT FH_PCT FH_RESET SD_PCT SD_RESET <<< \
   "$(python3 -c "
 import json, sys
@@ -33,7 +32,6 @@ def get(obj, *keys, default=''):
 
 model = get(data, 'model', 'display_name', default='unknown')
 parts = model.split()
-# 'Claude Sonnet 4.6' -> 'S4.6'; 'Claude Fable 5' -> 'F5'
 if len(parts) >= 3:
     abbrev = parts[1][0] + parts[2]
 elif len(parts) == 2:
@@ -74,9 +72,8 @@ else:
 }
 
 if [ "$FORMAT" = "short" ]; then
-  # Short: ModelAbbrev(effort)|ctx%|5h:X% T|7d:X% T  — compact with decimal reset times
   if [ -n "$EFFORT" ]; then
-    EFFORT_ABBREV="${EFFORT:0:1}"  # first letter: n=normal, f=fast, a=auto
+    EFFORT_ABBREV="${EFFORT:0:1}"
     MODEL_SHORT="${MODEL_ABBREV}(${EFFORT_ABBREV})"
   else
     MODEL_SHORT="${MODEL_ABBREV}"
@@ -100,15 +97,6 @@ if [ "$FORMAT" = "short" ]; then
 fi
 
 # Full format
-
-# Build 10-char context bar
-filled=$(( CTX_PCT / 10 ))
-[ $filled -gt 10 ] && filled=10
-empty=$(( 10 - filled ))
-bar=""
-for i in $(seq 1 $filled); do bar="${bar}#"; done
-for i in $(seq 1 $empty);  do bar="${bar}-"; done
-
 format_reset() {
   local reset_at="$1"
   [ -z "$reset_at" ] && echo "" && return
@@ -130,7 +118,7 @@ else
   MODEL_SEG="[$MODEL]"
 fi
 
-PARTS="$MODEL_SEG  |  context:${CTX_PCT}% [${bar}]"
+PARTS="$MODEL_SEG  |  context:${CTX_PCT}%"
 
 if [ -n "$FH_PCT" ] && [ "$FH_PCT" != "None" ]; then
   FH_PCT_INT=$(python3 -c "print(int(float('$FH_PCT')))" 2>/dev/null)
@@ -147,21 +135,164 @@ fi
 echo "$PARTS"
 ```
 
+## For Windows (PowerShell - Antigravity)
+
+Write `~/.antigravity/statusline.ps1` with the script below, then update `~/.gemini/antigravity-cli/settings.json`.
+
+```powershell
+$ProgressPreference = 'SilentlyContinue'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+$inputJson = $input | Out-String
+if (-not $inputJson -or $inputJson.Trim().Length -eq 0) { exit }
+try { $data = ConvertFrom-Json $inputJson } catch { exit }
+
+# --- Model (short name) ---
+$modelRaw = ""
+if ($data.model.display_name)     { $modelRaw = $data.model.display_name }
+elseif ($data.model.id)           { $modelRaw = $data.model.id }
+elseif ($data.model -is [string]) { $modelRaw = $data.model }
+
+# Shorten known model names
+$model = $modelRaw
+$model = $model -replace 'Claude ',        ''
+$model = $model -replace 'Gemini ',        'Gem '
+$model = $model -replace '\(Thinking\)',   '(T)'
+$model = $model -replace 'Sonnet',         'Son'
+$model = $model -replace 'Haiku',          'Hai'
+$model = $model -replace 'Opus',           'Ops'
+$model = $model -replace 'Flash',          'Fls'
+$model = $model -replace '\(Medium\)',     ''
+$model = $model -replace '\(medium\)',     ''
+$model = $model -replace 'Medium',         ''
+$model = $model -replace 'Preview',        'Prev'
+$model = $model -replace '\s{2,}',         ' '
+$model = $model.Trim()
+if ($model.Length -gt 15) { $model = $model.Substring(0, 14) + "." }
+
+# --- Agent state ---
+$agentState = if ($data.agent_state) { $data.agent_state } else { "idle" }
+
+# --- Context window ---
+$ctxPct = 0
+if ($null -ne $data.context_window.used_percentage) {
+    $ctxPct = [int][math]::Round([double]$data.context_window.used_percentage)
+}
+
+# --- Quota helper ---
+function Get-QuotaInfo($quota, $key) {
+    $bucket = $quota.$key
+    if ($null -eq $bucket -or $null -eq $bucket.remaining_fraction) { return $null }
+    $usedPct = [int][math]::Round((1.0 - [double]$bucket.remaining_fraction) * 100)
+    $resetStr = ""
+    if ($bucket.reset_in_seconds) {
+        $secs = [int]$bucket.reset_in_seconds
+        if ($secs -ge 86400) {
+            $d = [math]::Floor($secs / 86400)
+            $h = [math]::Floor(($secs % 86400) / 3600)
+            $resetStr = "${d}d${h}h"
+        } elseif ($secs -ge 3600) {
+            $h = [math]::Floor($secs / 3600)
+            $m = [math]::Floor(($secs % 3600) / 60)
+            $resetStr = "${h}h${m}m"
+        } else {
+            $m = [math]::Floor($secs / 60)
+            $resetStr = "${m}m"
+        }
+    }
+    return @{ UsedPct = $usedPct; Reset = $resetStr }
+}
+
+# Detect model family
+$isGemini = $modelRaw.ToLower().Contains("gemini")
+$prefix   = if ($isGemini) { "gemini" } else { "3p" }
+
+$quota5h  = Get-QuotaInfo $data.quota ($prefix + "-5h")
+$quotaWk  = Get-QuotaInfo $data.quota ($prefix + "-weekly")
+
+function Bar-Color([int]$pct) {
+    if ($pct -ge 90) { return "Red" }
+    elseif ($pct -ge 70) { return "Yellow" }
+    else { return "Cyan" }
+}
+
+$ctxColor = if ($ctxPct -ge 90) { "Red" } elseif ($ctxPct -ge 70) { "Yellow" } else { "Green" }
+
+# State label & color
+$stateLabel = switch ($agentState.ToLower()) {
+    "idle"     { "RDY" }
+    "ready"    { "RDY" }
+    "thinking" { "THK" }
+    "working"  { "WRK" }
+    "tool"     { "TUL" }
+    default    { "..." }
+}
+$stateColor = switch ($agentState.ToLower()) {
+    "idle"     { "Green" }
+    "ready"    { "Green" }
+    "thinking" { "Yellow" }
+    "working"  { "Cyan" }
+    "tool"     { "Magenta" }
+    default    { "White" }
+}
+
+# --- Render ---
+Write-Host "" -NoNewline
+Write-Host " " -NoNewline
+Write-Host $stateLabel -ForegroundColor $stateColor -NoNewline
+Write-Host " | " -ForegroundColor DarkGray -NoNewline
+
+# Model
+Write-Host $model -ForegroundColor Magenta -NoNewline
+Write-Host " | " -ForegroundColor DarkGray -NoNewline
+
+# Context
+Write-Host "ctx " -ForegroundColor DarkGray -NoNewline
+Write-Host "$ctxPct%" -ForegroundColor $ctxColor -NoNewline
+Write-Host " | " -ForegroundColor DarkGray -NoNewline
+
+# 5h quota
+if ($null -ne $quota5h) {
+    $c = Bar-Color $quota5h.UsedPct
+    Write-Host "5h " -ForegroundColor DarkGray -NoNewline
+    Write-Host "$($quota5h.UsedPct)%" -ForegroundColor $c -NoNewline
+    if ($quota5h.Reset) { Write-Host " r:$($quota5h.Reset)" -ForegroundColor DarkGray -NoNewline }
+} else {
+    Write-Host "5h N/A" -ForegroundColor DarkGray -NoNewline
+}
+Write-Host " | " -ForegroundColor DarkGray -NoNewline
+
+# Weekly quota
+if ($null -ne $quotaWk) {
+    $c = Bar-Color $quotaWk.UsedPct
+    Write-Host "wk " -ForegroundColor DarkGray -NoNewline
+    Write-Host "$($quotaWk.UsedPct)%" -ForegroundColor $c -NoNewline
+    if ($quotaWk.Reset) { Write-Host " r:$($quotaWk.Reset)" -ForegroundColor DarkGray -NoNewline }
+} else {
+    Write-Host "wk N/A" -ForegroundColor DarkGray -NoNewline
+}
+
+Write-Host ""
+```
+
 ## Steps
 
-1. Write the script above to `~/.claude/statusline.sh`.
-2. Run `chmod +x ~/.claude/statusline.sh` to make it executable.
-3. Read `~/.claude/settings.json`, then add or update the `statusLine` key:
-
-```json
-"statusLine": {
-  "type": "command",
-  "command": "~/.claude/statusline.sh",
-  "refreshInterval": 30
-}
-```
-
-   Merge it into the existing JSON — do not overwrite other settings.
-
-4. Confirm to the user that the status line is configured and will appear at the bottom of Claude Code after the next interaction. Mention that `5h` and `7d` segments only appear for Claude.ai Pro/Max subscribers after the first API response.
-```
+1. Save the respective script to your local path:
+   - macOS/Linux: `~/.claude/statusline.sh`
+   - Windows: `~/.antigravity/statusline.ps1`
+2. Update the `statusLine` configuration in:
+   - macOS/Linux (`~/.claude/settings.json`):
+     ```json
+     "statusLine": {
+       "type": "command",
+       "command": "~/.claude/statusline.sh",
+       "refreshInterval": 30
+     }
+     ```
+   - Windows (`~/.gemini/antigravity-cli/settings.json`):
+     ```json
+     "statusLine": {
+       "type": "",
+       "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File <your-home>/.antigravity/statusline.ps1"
+     }
+     ```
