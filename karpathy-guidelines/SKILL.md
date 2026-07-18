@@ -1,6 +1,6 @@
 ---
 name: karpathy-guidelines
-description: Behavioral guidelines to reduce common LLM coding mistakes. Use when writing, reviewing, or refactoring code to avoid overcomplication, make surgical changes, surface assumptions, and define verifiable success criteria. Also covers syncing these guidelines into a project's own CLAUDE.md — see sync-claude-md.md — when the user asks to add/check/sync them there, or when a project's CLAUDE.md is in view and doesn't yet contain them.
+description: Behavioral guidelines to reduce common LLM coding mistakes. Use when writing, reviewing, or refactoring code to avoid overcomplication, make surgical changes, surface assumptions, and define verifiable success criteria. Also covers syncing these guidelines into a project's own CLAUDE.md — see setup-claude-md.md — when the user asks to add/check/sync them there, or when a project's CLAUDE.md is in view and doesn't yet contain them.
 license: MIT
 ---
 
@@ -96,4 +96,4 @@ At the start of any Python work:
 
 To check whether a project's own `CLAUDE.md` should have this text added (so it
 applies even without the skill being invoked), see
-[sync-claude-md.md](./sync-claude-md.md).
+[setup-claude-md.md](./setup-claude-md.md).
