@@ -3,6 +3,18 @@
 Companion behavior for `global-guidelines`: keep this guideline text present in a `CLAUDE.md`
 file — the global one (`~/.claude/CLAUDE.md`) or a project's own — not just applied in-session.
 
+## The global CLAUDE.md is deliberately not version-controlled
+
+`~/.claude/CLAUDE.md` lives outside any repo on purpose — don't propose putting it in one.
+This skill IS the canonical copy and the backup; re-running the sync on a new machine
+recreates it. More importantly, machines are *expected* to diverge: one may be unable to run
+what another can (blocked APIs, no GPU, different OS), so its global rules should differ.
+A shared repo would force uniformity that is wrong here.
+
+That is also why the alignment check below is semantic rather than a byte-diff, and why
+step 5 stops to ask instead of overwriting: a difference is as likely to be a deliberate
+local decision as it is to be drift.
+
 ## When to run this
 
 - The user asks to add/sync/check/merge the global guidelines into a `CLAUDE.md`.
