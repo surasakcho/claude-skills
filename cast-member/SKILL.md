@@ -44,9 +44,24 @@ referenced; the enemy is multi-view drift. Bake consistency in:
    content-policy behavior). **Save it to `<name>.txt` in the member's folder — this
    is what every future revision starts from.**
 3. **Generate** — run the project's image-generation command for cast.
+   - **Ask how many variants** before spending; **default 1**. On a first-ever run of
+     a prompt, prefer 1 regardless: if it trips a content filter or comes back
+     malformed, three identical failures teach nothing that one does.
+   - **Dry-run first, always.** Show what will be generated and the estimated cost,
+     and wait for an explicit go-ahead. Never spend on an assumption.
+   - **Every output must be traceable** to the exact prompt that produced it — store
+     the prompt verbatim, not just the file it came from, since prompt files are
+     edited between rounds. Round-number the outputs so a later round cannot
+     overwrite an earlier one's variants; comparing them is the point.
 4. **Review before locking** — present the sheet; if the project uses Issue gates and
    you want mobile review, post it to an Issue (same mechanism as short gates).
    Approve → lock; reject → revise (below).
+   - **Show the currently locked images alongside the candidates.** A reviewer cannot
+     tell an intended change from drift without seeing the canon being matched.
+   - Feedback given in conversation must be **relayed into the review thread
+     verbatim**, or the thread becomes an incomplete record and a later session sees
+     a change with no stated reason. Keep reviewer wording and your own analysis
+     clearly distinguished — never let reasoning read as something that was asked for.
 5. **Lock** — save the approved image(s) into the library folder (e.g.
    `branding/cast/archetypes/<name>/<name>.png` + per-view files), keep `<name>.txt`
    beside them, and register the `REFS:` name per the project's convention. If it's a
@@ -59,6 +74,12 @@ referenced; the enemy is multi-view drift. Bake consistency in:
    everywhere)? **Regenerate only what changed:**
    - one view → regenerate just that view, matched to the locked others;
    - design-wide → re-run the single-pass sheet with the edited prompt.
+   **Vague feedback ("the horns look wrong") never goes straight to a regeneration.**
+   Translate it into a concrete prompt diff and get that approved first — otherwise
+   you are spending money on your interpretation of what was meant.
+   Before blaming wording, consider whether the trait is even *resolvable* at the
+   size it is being judged: fine material detail can fail to render on a multi-pose
+   sheet while being perfectly well specified. Test at full frame before rewriting.
 3. **Edit `<name>.txt`**, regenerate, review (as above).
 4. **Re-lock** — replace the image(s) and append a short `NOTE (history):` line to
    `<name>.txt` (what changed and why) so iterations are traceable and the next
