@@ -18,6 +18,7 @@
     "./skills/productivity/handoff",
     "./wrap",
     "./wrap-all",
+    "./global-guidelines",
     "./skills/productivity/teach",
     "./skills/productivity/writing-great-skills",
     "./setup-status-line"

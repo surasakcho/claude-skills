@@ -181,6 +181,7 @@ General workflow tools, not code-specific.
 - **[grilling](./skills/productivity/grilling/SKILL.md)** — Interview the user relentlessly about a plan or design until every branch of the decision tree is resolved. The reusable loop behind `grill-me` and `grill-with-docs`.
 - **[wrap](./wrap/SKILL.md)** — End-of-session ritual: summarize the session, update whatever project logs already exist, then commit and push. Defers to a project's own `wrap` convention if its `CLAUDE.md` defines one.
 - **[wrap-all](./wrap-all/SKILL.md)** — Wrap every repo on the machine with outstanding work in one pass: scans a root directory, then runs the wrap ritual on each dirty or unpushed repo, one at a time.
+- **[global-guidelines](./global-guidelines/SKILL.md)** — Canonical baseline working rules (subagent delegation policy, session discipline) applied on every multi-step task, and synced into a project's or the global `CLAUDE.md` when it's missing or out of date.
 
 ### Misc
 
