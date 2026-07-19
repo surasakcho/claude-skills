@@ -14,18 +14,22 @@ budget:
 
 # ── Stage graph ─────────────────────────────────────────────────────
 # The /content-pipeline orchestrator runs these in order. Each stage names the
-# skill that does the work and the gate that ends it.
+# skill that does the work, the gate that ends it, and how it runs.
 #   gate: none    → advance automatically
 #   gate: pr      → human gate via GitHub PR (text/storyboard review)
 #   gate: release → human gate via GitHub Release asset (render review)
+#   exec: inline  → run in-session on the session model (DEFAULT if omitted;
+#                   required for interactive stages that interview the user live)
+#   exec: subagent + model: → run as a subagent on the named model
+#                   (haiku|sonnet|opus|fable) to save credits on mechanical work
 # `skill:` must name an installed skill in claude-skills.
 stages:
-  - { id: ideate,     skill: concept-interview,      gate: none }
-  - { id: script,     skill: showrunner-short,       gate: none }
-  - { id: storyboard, skill: draft-asset-prompts,    gate: pr }
-  - { id: generate,   skill: run-clips,              gate: none }
-  - { id: build,      skill: run-build,              gate: release }
-  - { id: publish,    skill: publish-metadata,       gate: none }
+  - { id: ideate,     skill: concept-interview,   gate: none,    exec: inline }
+  - { id: script,     skill: showrunner-short,    gate: none,    exec: inline }
+  - { id: storyboard, skill: draft-asset-prompts, gate: pr,      exec: inline }
+  - { id: generate,   skill: run-clips,           gate: none,    exec: subagent, model: haiku }
+  - { id: build,      skill: run-build,           gate: release, exec: subagent, model: haiku }
+  - { id: publish,    skill: publish-metadata,    gate: none,    exec: inline }
 ---
 
 # PROJECT_NAME — charter
