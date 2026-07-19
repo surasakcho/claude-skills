@@ -32,6 +32,14 @@ stages:
   - { id: generate,   skill: run-clips,           gate: none,  exec: subagent, model: haiku }
   - { id: build,      skill: run-build,           gate: issue, exec: subagent, model: haiku }  # gate: render
   - { id: publish,    skill: publish-metadata,    gate: none,  exec: inline }
+
+# ── Build commands (fill for any run-* stage) ───────────────────────
+# Shell command(s) the run-* skills execute for their stage. {item} = the
+# content item's directory. Authoritative over prose — the money-spending
+# stages run exactly these. Delete keys for stages you don't have.
+commands:
+  generate: "REPLACE — command to generate clips for {item}"
+  build: "REPLACE — command(s) to build the final render for {item}"
 ---
 
 # PROJECT_NAME — charter

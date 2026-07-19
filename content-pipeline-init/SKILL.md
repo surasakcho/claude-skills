@@ -38,10 +38,12 @@ root, filling placeholders:
 - `project.md` — replace `PROJECT_SLUG`, `PROJECT_NAME`, `ONE_LINE_NICHE`,
   `ONE_LINE_VOICE`, personas, budget, and the `stages:` graph with the confirmed
   values. Keep the frontmatter valid YAML (the `stages` entries are flow
-  mappings: `{ id: ..., skill: ..., gate: ... }`).
+  mappings: `{ id: ..., skill: ..., gate: ... }`). Fill `commands.*` with the real
+  shell command for every `run-*` stage (`{item}` = the item's directory), or
+  delete keys for stages the project doesn't have.
 - `pipeline.md` — replace `PROJECT_SLUG`, set `STAGE_SEQUENCE` to a human-
   readable arrow chain of the stage ids with gates marked (e.g.
-  `ideate → script → storyboard(GATE:pr) → generate → build(GATE:release) → publish`),
+  `ideate → script(GATE) → storyboard(GATE) → generate → build(GATE) → publish`),
   and set `THRESHOLD` (stockpile launch target). Leave the table empty — the
   orchestrator adds rows as items enter the pipeline.
 - `context.md` — copy as-is unless the user already has decisions to record.
