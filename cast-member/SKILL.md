@@ -85,6 +85,11 @@ referenced; the enemy is multi-view drift. Bake consistency in:
    `<name>.txt` (what changed and why) so iterations are traceable and the next
    session doesn't mistake drift for a decision. Preserve the prior version if it
    might be wanted.
+   **Keep the decision log in the repo, not only in the review thread.** A thread
+   on a hosting service is not in a fresh clone; feedback and selections belong
+   beside the prompt they changed, so `git log` on the member's folder tells the
+   whole story. If the review tool has a "current canon" panel, refresh it on every
+   lock — a stale panel silently invites judging candidates against the wrong thing.
 5. **Propagate** — if the change breaks a mascot counterpart's resemblance or a
    style-guide rule, flag it before locking.
 
