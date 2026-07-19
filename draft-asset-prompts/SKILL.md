@@ -5,6 +5,8 @@ description: Draft or reconcile T2I image prompts and T2V/Flow animation prompts
 
 Two distinct jobs live under this skill: **drafting** prompts from a locked concept before generation, and **reconciling** prompt files against what was actually kept after the user iterated live in the T2I/T2V tool. Figure out which one the user needs — if they mention pasting a generation-tool transcript, selecting/keeping specific images, or say something like "I updated clip X," that's reconciliation, not drafting.
 
+**Inside a content-pipeline project:** if the project has a `project.md` (pipeline config — niche, format, budget) and `context.md` (decision log + glossary), read both first — `context.md` **overrides on conflict**. They carry project-level constraints (IP rules, format, asset-hosting conventions) this stage must honor, alongside the `concept.txt` + `style_guide.md` you already source from.
+
 ## Drafting T2I prompts (before generation)
 
 Source the prompt content from `concept.txt` (per-short: mechanic, narrative beat, setting, asset-slot breakdown) and `style_guide.md` (per-game: render style, palette + what each color *means*, camera language, character design, IP-safety constraints). Don't invent details these files don't cover — flag the gap and ask instead.

@@ -7,6 +7,8 @@ Interview the user one question at a time to build a concrete, T2I-ready spec �
 
 Explore the codebase/project first (existing game design docs, prior shorts, an existing style guide) before asking anything that's already answered there.
 
+**Inside a content-pipeline project:** if the project has a `project.md` (pipeline config — niche, format, budget) and `context.md` (decision log + glossary), read both before interviewing — `context.md` **overrides on conflict**. They carry project-level direction and constraints this stage must honor, alongside the game canon (`style_guide.md` / the real dev project) you already use.
+
 ## Step 0 — check for a real dev project BEFORE asking anything
 
 Before any interview question, check whether this game has a real development project already (a Unity/Unreal/Godot project folder, a game repo — ask the user if it's not obvious, e.g. "is there a dev project for this game yet, and if so where?"). This determines who owns canon:
