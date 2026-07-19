@@ -21,6 +21,8 @@ Source the prompt content from `concept.txt` (per-short: mechanic, narrative bea
 
 These come after `t2i_prompts.txt` is finalized against real kept images — animate the *locked* composition, don't redesign it.
 
+**Do this first — screen every keyframe for animatability.** Before writing any motion, pass over each locked shot and check for multiple independently-moving components; recompose the ones that fail (see "recompose it, don't choreograph it" below) *before* drafting a single motion prompt. It's cheap to swap a keyframe now and expensive to burn clip generations on a shot that can't animate — so this screen is the first step of T2V drafting, not an afterthought.
+
 - Motion should be small and continuous (drift, flicker, breathing, slow push-in), matched to each shot's dramatic weight — not big new camera moves or added elements.
 - Any shot with legible on-screen UI/HUD text needs an explicit "keep this text static, sharp, and unchanged" instruction — generative video is prone to warping on-screen text specifically, more so than T2I is. **Opacity is a separate axis from "static/unchanged" — say so explicitly.** A "keep static" instruction alone did not prevent a HUD fading out in opacity over the clip's duration in one real case; the model apparently didn't infer that "static" also meant "constant opacity for the full clip." State the full-duration, full-opacity requirement as its own explicit line, don't assume it's implied.
 - Map each clip's target duration from the locked script (Hook/Twist/Trap timing), so nothing needs re-cutting after generation.

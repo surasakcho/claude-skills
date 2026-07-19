@@ -15,14 +15,19 @@ before that gate clears.
 1. **Ensure animation prompts exist.** If `flow_prompts.txt` (or the project's
    T2V-prompt file) isn't drafted for the locked keyframes, run `draft-asset-prompts`
    to write it first. Animate the locked composition; don't redesign it.
-2. **Run the configured command.** Take `commands.generate` from `project.md`,
+2. **Gate on animatability before spending.** Confirm every shot passed
+   `draft-asset-prompts`' animatability screen. A keyframe with many independently-
+   moving components (armies, crowds, players on a field) must be **recomposed**
+   before it reaches clip generation — not micromanaged in the prompt. Do not spend
+   clip budget on a shot flagged for recomposition; send it back first.
+3. **Run the configured command.** Take `commands.generate` from `project.md`,
    substitute `{item}` with the item's directory, and run it. This is the
    authoritative command — don't guess a different one from prose. If
    `commands.generate` is missing, stop and ask for the command.
-3. **On failure, re-run only the owning unit** (the failed shot/subcommand), not the
+4. **On failure, re-run only the owning unit** (the failed shot/subcommand), not the
    whole batch — clips cost money. Use any free retry path the charter documents
    before re-spending.
-4. **Report** what was produced (clip files in playback order) and the spend if the
+5. **Report** what was produced (clip files in playback order) and the spend if the
    command reports it. Leave `pipeline.md` updates to the orchestrator.
 
 Respect all pipeline conventions in `context.md` (output filenames, playback-order
