@@ -27,8 +27,8 @@ Advancement follows this order **exactly — never skip a stage**.
 
 Gate values:
 - `none` — advance automatically once the stage's skill completes.
-- `pr` / `release` — a human gate ends this stage. Open the gate and stop (see
-  **Gates** below). Never do gated (paid) downstream work before a gate clears.
+- `issue` — a human gate ends this stage. Open the gate and stop (see **Gates**
+  below). Never do gated (paid) downstream work before a gate clears.
 
 Execution (`exec`, optional — defaults to `inline`):
 - `inline` — run the stage in this session on the current model. Required for
@@ -68,7 +68,7 @@ most-advanced unblocked item and name its next action.
    - `none` → update the row: Stage = the **next** stage id, clear Waiting-on.
      Continue automatically into the next stage unless the user asked for a single
      step.
-   - `pr` / `release` → **open the gate** (see **Gates**) and stop. Do not
+   - `issue` → **open/update the gate** (see **Gates**) and stop. Do not
      auto-advance and do not start the next stage.
 5. If the finished stage was the **last** in the graph, mark the item complete per
    project convention (e.g. `stockpiled`) and update any stockpile count in
@@ -78,50 +78,49 @@ most-advanced unblocked item and name its next action.
 
 A gate is a human checkpoint that ends a stage. The orchestrator opens it, records
 it in `pipeline.md`, and **stops** — it resolves the gate only when the user asks
-to check or resume. Two gate shapes (set per stage by `gate:`):
+to check or resume.
 
-- `pr` — text/storyboard review on a GitHub **PR**.
-- `release` — render review via a GitHub **Release** asset (mobile-friendly,
-  full-res) linked from a PR.
+**One GitHub Issue per item is the review surface** (not PRs). It's created at the
+item's first gate and carried through every gate, relabeled for the current gate
+stage. The user **comments** to approve or reject. Open Issues are the live
+production board; a closed Issue means the item shipped.
 
-Gate branches/tags are named per item **and** stage so multiple gates never
-collide: branch `<item>_gate_<stage-id>`, release tag `<item>-<stage-id>`.
-
-### Opening a `pr` gate
-1. Confirm the stage's review artifact exists (e.g. `storyboard.md` plus every
-   asset it references). If not, the stage isn't really done — go back.
-2. Create branch `<item>_gate_<stage-id>` off the item's branch; commit the review
-   artifact(s); push.
-3. `gh pr create --base <project's default branch> --head <gate branch>`, titled
-   with the item + stage, body stating **how to respond: merge = approve; a
-   comment naming a stage = reject and revise from that stage** (default: this
-   stage).
-4. In `pipeline.md` set Gate = `<stage-id>`, Review link = PR URL, Waiting-on =
-   `user review PR #N`. Stop.
-
-### Opening a `release` gate
-1. Confirm the render/output artifact exists.
-2. Publish it as a prerelease asset:
-   `gh release create <item>-<stage-id> <artifact> --prerelease --title "..."`.
-3. Open a PR carrying the QA artifact (e.g. `qa_checklist.md`) that links the
-   release asset; same approve/reject convention in the body.
-4. Record Gate / Review link / Waiting-on as above. Stop.
+### Opening (or updating) a gate
+1. Confirm the stage's review artifact exists. If not, the stage isn't really done
+   — go back.
+2. Ensure the item's review Issue exists: create it at the first gate
+   (`gh issue create`, titled for the item); otherwise reuse the same Issue.
+3. Relabel it for the current gate stage (e.g. `gate-<stage-id>`), removing the
+   previous gate's label.
+4. Put the stage's review content in the Issue — text inline; assets embedded or
+   linked **per the project's hosting convention** (from `project.md` /
+   `context.md`). Asset hosting is project plumbing, not this skill's concern: e.g.
+   a private repo whose images won't render on mobile may mirror them to a public
+   repo and embed raw URLs, or host a render as a Release-asset link. State in the
+   body **how to respond: comment to approve (advance) or reject (name the stage to
+   revise from).**
+5. In `pipeline.md` set Gate = `<stage-id>`, Review link = Issue URL, Waiting-on =
+   `user review Issue #N`. Stop.
 
 ### Resolving a gate (user says "check gate" / "resume")
-Read PR state: `gh pr view <n> --json state,mergedAt,comments,reviews`.
+Read the Issue: `gh issue view <n> --json state,comments`.
 
-- **Merged → approved.** Advance the item to the next stage; clear Gate +
-  Waiting-on. For a `release` gate, delete the release (`gh release delete
-  <item>-<stage-id>`) and the gate branch. Then continue the Advance loop.
-- **Open with a rejecting comment/review → rejected.** Read the comment for which
-  stage to revise from (default: the gate's own stage). Set the item's Stage back
-  to that stage, clear the gate, record the reason in Notes, and re-run Advance
-  from there — this regenerates downstream artifacts and re-opens the gate.
-- **Open, no decision yet.** Report still waiting; change nothing.
+- **Approve comment → advance.** Move the item to the next stage; clear Waiting-on.
+  If this was the **last** gate, **ship** per project convention (e.g. merge the
+  item's branch → the default branch, delete any render Release, and **close the
+  Issue**). Otherwise relabel the Issue for the next gate and continue the Advance
+  loop.
+- **Reject comment → revise.** Read which stage to revise from (default: the gate's
+  own stage). Set the item's Stage back to that stage, record the reason in Notes,
+  and re-run Advance from there — this regenerates downstream artifacts and re-posts
+  them to the same Issue.
+- **No decision yet.** Report still waiting; change nothing.
 
 ### Rules
 - No gated/paid downstream work before the gate is approved.
-- One open gate per item at a time.
+- One review Issue per item; it lives from the first gate until ship.
+- Approve/reject is signaled by **comments** — never by closing the Issue (closing
+  = shipped).
 
 ## Owning pipeline.md
 
