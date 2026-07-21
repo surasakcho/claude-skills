@@ -1,6 +1,6 @@
 ---
 name: session-sandbox
-description: Safely develop and test automation that starts/kills Claude or tmux sessions, installs cron/systemd timers, or touches live sessions — inside an isolated, guard-enforced sandbox so real sessions (and the current session) are structurally unreachable. Use before building any session-continuity / rotation / auto-launch / auto-resume mechanism, or any script that could kill a session, install a cron job, or change global config. Prevents the "it ran on my live session and broke it" failure.
+description: Safely develop and test automation that starts/kills Claude or tmux sessions, installs cron/systemd timers, or touches live sessions — inside an isolated, guard-enforced sandbox where only sbx-* names can be targeted, so real sessions are structurally unreachable (a sandbox session may still refresh itself). Use before building any session-continuity / rotation / auto-launch / auto-resume mechanism, or any script that could kill a session, install a cron job, or change global config. Prevents the "it ran on my live session and broke it" failure.
 ---
 
 # session-sandbox — develop live-session automation without blast radius
