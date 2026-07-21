@@ -16,6 +16,7 @@
     "./skills/productivity/grill-me",
     "./skills/productivity/grilling",
     "./skills/productivity/handoff",
+    "./rotate-session",
     "./wrap",
     "./wrap-all",
     "./global-guidelines",
