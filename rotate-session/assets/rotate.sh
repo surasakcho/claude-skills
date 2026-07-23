@@ -24,7 +24,7 @@ fail(){ ROTATE_LOG "PREFLIGHT FAIL: $*"; exit 1; }
 source "$CONF"
 : "${SESSION:?rotate.conf missing SESSION}"
 MODEL="${MODEL:-}"; EFFORT="${EFFORT:-}"; RC_NAME="${RC_NAME:-$SESSION}"
-PERMISSION_MODE="${PERMISSION_MODE:-}"; DELAY="${DELAY:-60}"
+PERMISSION_MODE="${PERMISSION_MODE:-}"; DELAY="${DELAY:-60}"; BOOTSTRAP_EXTRA="${BOOTSTRAP_EXTRA:-}"
 REPO_DIR="${REPO_DIR_OVERRIDE:-$REPO_DIR}"
 
 # --- THE GUARD: the config's SESSION must be THIS live session (self-rotation only) ---
@@ -44,7 +44,7 @@ fi
 SHA="${1:-unknown}"
 
 # 1. Successor bootstrap — SHA dual-check per e-biz-factory/docs/auto-resume-design.md.
-BOOTSTRAP="You are the REFRESHED successor for session '$SESSION'. Read the committed handoff note (CONTEXT.md or HANDOFF.md '## Next Session', or TODO.md). Run 'git fetch' and CONFIRM predecessor commit $SHA is present before proceeding. Then reply in ONE short line confirming you are the fresh successor and stating the next step. Do nothing else until instructed."
+BOOTSTRAP="You are the REFRESHED successor for session '$SESSION'. Read the committed handoff note (CONTEXT.md or HANDOFF.md '## Next Session', or TODO.md). Run 'git fetch' and CONFIRM predecessor commit $SHA is present before proceeding. Then reply in ONE short line confirming you are the fresh successor and stating the next step. Do nothing else until instructed.${BOOTSTRAP_EXTRA:+ $BOOTSTRAP_EXTRA}"
 
 # 2. Schedule the successor (detached; survives our death, incl. self-rotation). Pass PATH through.
 LAUNCH="$HERE/rotate-launch.sh"
