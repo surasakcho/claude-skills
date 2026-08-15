@@ -18,6 +18,7 @@
     "./skills/productivity/handoff",
     "./check-feedback",
     "./lesson-review",
+    "./retrieve-lessons",
     "./rotate-session",
     "./verify-outputs",
     "./wrap",

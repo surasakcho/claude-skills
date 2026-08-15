@@ -186,6 +186,7 @@ General workflow tools, not code-specific.
 - **[wrap-all](./wrap-all/SKILL.md)** — Wrap every repo on the machine with outstanding work in one pass: scans a root directory, then runs the wrap ritual on each dirty or unpushed repo, one at a time.
 - **[global-guidelines](./global-guidelines/SKILL.md)** — Canonical baseline working rules (subagent delegation policy, session discipline) applied on every multi-step task, and synced into a project's or the global `CLAUDE.md` when it's missing or out of date.
 - **[lesson-review](./lesson-review/SKILL.md)** — Weekly pass that sweeps project repos for lessons stranded in one project, publishes the portable ones to [agentic-ai-rules-and-skills](https://github.com/surasakcho/agentic-ai-rules-and-skills), and health-checks what is already shared — including a leak scan for machine paths, emails and private names.
+- **[retrieve-lessons](./retrieve-lessons/SKILL.md)** — The other direction: adopts those shared rules into a repo that lacks them. Selects only the categories the repo has evidence for, links rather than copies, and pins the commit so drift fails a check instead of going unnoticed.
 
 ### Misc
 
