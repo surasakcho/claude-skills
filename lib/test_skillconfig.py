@@ -26,6 +26,12 @@ def run(repo, *args, stdin=""):
                           input=stdin, capture_output=True, encoding="utf-8", errors="replace")
 
 
+def run_after(repo, *args, stdin=""):
+    """--repo AFTER the subcommand -- the order the docs show, and the one that was broken."""
+    return subprocess.run([sys.executable, "-X", "utf8", str(SC), *args, "--repo", str(repo)],
+                          input=stdin, capture_output=True, encoding="utf-8", errors="replace")
+
+
 def new_repo(root: Path, name: str) -> Path:
     r = root / name
     r.mkdir(parents=True)
@@ -108,6 +114,24 @@ def main():
         run(repo4, "set", "SCAN_ROOT", "C:/Program Files/My Repos")
         r = run(repo4, "get", "SCAN_ROOT", stdin="")
         checks["values with spaces round-trip"] = r.stdout.strip() == "C:/Program Files/My Repos"
+
+        # --- the documented argument order must actually work ---
+        # Every example in the docstring, the rule and the skills puts --repo AFTER the
+        # subcommand. argparse rejected exactly that, and the suite never noticed because it
+        # only ever called the other order. A usage nobody executes is a usage nobody verified.
+        repo5 = new_repo(tmp, "e")
+        r = run_after(repo5, "set", "MACHINE_NAME", "beta")
+        checks["--repo works AFTER the subcommand (set)"] = r.returncode == 0
+        r = run_after(repo5, "get", "MACHINE_NAME", stdin="")
+        checks["--repo works AFTER the subcommand (get)"] = (
+            r.returncode == 0 and r.stdout.strip() == "beta")
+        r = run_after(repo5, "check")
+        checks["--repo works AFTER the subcommand (check)"] = r.returncode == 0
+        r = run_after(repo5, "list")
+        checks["--repo works AFTER the subcommand (list)"] = "MACHINE_NAME=beta" in r.stdout
+        # ...and the order before it must keep working.
+        r = run(repo5, "get", "MACHINE_NAME", stdin="")
+        checks["--repo still works BEFORE the subcommand"] = r.stdout.strip() == "beta"
 
     failures = [k for k, ok in checks.items() if not ok]
     for k, ok in checks.items():

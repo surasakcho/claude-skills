@@ -1,1 +1,4 @@
 node_modules
+
+# Machine-specific values (lib/skillconfig.py). Must never be committed.
+.env

@@ -180,12 +180,17 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--repo", default=".", help="repo whose .env holds the values")
+    # --repo must work on BOTH sides of the subcommand. argparse only accepts it before the
+    # subcommand unless every subparser also declares it, and SUPPRESS is what stops the
+    # subparser's default from clobbering a value given before it.
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--repo", default=argparse.SUPPRESS)
     sub = ap.add_subparsers(dest="cmd", required=True)
-    g = sub.add_parser("get"); g.add_argument("key")
+    g = sub.add_parser("get", parents=[common]); g.add_argument("key")
     g.add_argument("--prompt"); g.add_argument("--example")
-    s = sub.add_parser("set"); s.add_argument("key"); s.add_argument("value")
-    sub.add_parser("list")
-    sub.add_parser("check")
+    s = sub.add_parser("set", parents=[common]); s.add_argument("key"); s.add_argument("value")
+    sub.add_parser("list", parents=[common])
+    sub.add_parser("check", parents=[common])
     args = ap.parse_args()
 
     repo = Path(args.repo).resolve()

@@ -17,7 +17,16 @@
 set -euo pipefail
 
 SBX_PREFIX="sbx-"                                   # reserved namespace — real sessions never start with this
-SBX_REPO="<sandbox-root>/repos/sandbox"
+
+# SBX_REPO is machine-specific and is therefore never a literal here: a path in a shared skill
+# publishes a username and a directory layout. Order: environment > <skills-repo>/.env > hard
+# failure. There is deliberately NO default — a sandbox rooted at a guessed path is exactly the
+# silent mistake this file exists to prevent, and failing loudly costs one command to fix.
+SBX_ENV_FILE="${SBX_ENV_FILE:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/.env}"
+if [ -z "${SBX_REPO:-}" ] && [ -f "$SBX_ENV_FILE" ]; then
+  SBX_REPO="$(sed -n 's/^SBX_REPO=//p' "$SBX_ENV_FILE" | head -n1)"
+fi
+: "${SBX_REPO:?is not set. Export it, or store it once: python lib/skillconfig.py get SBX_REPO --repo <skills-repo> --prompt 'Sandbox repo root'}"
 SBX_LOCK="${HOME}/.cache/sandbox-session.lock"      # sandbox-only lock (never the factory lock)
 SBX_LOGDIR="${SBX_REPO}/state/logs"
 SBX_CRON_TAG="# SANDBOX-CONTINUITY"                 # marker on EVERY sandbox cron line, for surgical add/remove

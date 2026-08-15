@@ -296,3 +296,5 @@ Write-Host ""
        "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File <your-home>/.antigravity/statusline.ps1"
      }
      ```
+     Substitute the real home directory when writing the file — `<your-home>` is a placeholder,
+     and PowerShell will not expand `~` or `%USERPROFILE%` inside a `-File` argument.

@@ -10,8 +10,15 @@ everything ends up committed and pushed.
 
 ## Scan root
 
-Default scan root: `<your-home>\Repos` (each immediate subfolder containing a `.git` is a
-repo). If the user named different root(s), use those instead.
+If the user named a root, use that. Otherwise read `SCAN_ROOT` from this skills repo's `.env`,
+prompting for it on first use and storing the answer — a scan root is machine-specific, so it
+is never hardcoded here:
+
+```bash
+SCAN_ROOT="$(python lib/skillconfig.py get SCAN_ROOT --repo <skills-repo> --prompt 'Repo scan root')"
+```
+
+Each immediate subfolder of that root containing a `.git` is a repo.
 
 ## 1. Enumerate repos with outstanding work
 
