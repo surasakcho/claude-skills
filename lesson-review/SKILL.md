@@ -10,15 +10,18 @@ The weekly pass that keeps the shared rules repo alive. Full policy in that repo
 `CADENCE.md`; this is how to execute it.
 
 **Shared repo:** `https://github.com/surasakcho/agentic-ai-rules-and-skills`
-**Local clone (this machine):** `<your-home>/Repos/agentic-ai-rules-and-skills`
 
 Run `harvest.py` for the mechanical parts, then apply judgement to what it surfaces. The
 script finds candidates and checks health; it deliberately does **not** decide what is
 portable — that is the part that needs a reader.
 
 ```bash
-python -X utf8 harvest.py --projects <your-home>/Repos --shared <your-home>/Repos/agentic-ai-rules-and-skills
+python -X utf8 harvest.py --projects <dir-holding-your-project-repos> --shared <clone-of-the-shared-repo>
 ```
+
+Paths are arguments, never hardcoded here: a machine path in a public repo publishes a
+username and a directory layout. See
+[sanitise-before-sharing](https://github.com/surasakcho/agentic-ai-rules-and-skills/blob/main/rules/agent-workflow/sanitise-before-sharing.md).
 
 ## The pass, in order
 
@@ -45,7 +48,14 @@ self-test executes, every internal link resolves, and every rule is checked for 
 reference. **A rule later contradicted by experience gets deleted, not hedged** — git keeps
 the history, and a hedged rule is one nobody can act on.
 
-**5. Publish.** Commit, push, and append one line to `lessons/_review-log.md` with the date
+**5. Sanitise before pushing — blocking.** `--deny` the private repo names and collaborator
+names so the scan is specific to what must stay out; it already catches absolute paths, emails
+and links that escape the repo. Then read for the one thing no scan can judge: **whether a
+number is a defect count or somebody's unpublished result.** Never publish a raw write-up
+next to its redacted version. See
+[sanitise-before-sharing](https://github.com/surasakcho/agentic-ai-rules-and-skills/blob/main/rules/agent-workflow/sanitise-before-sharing.md).
+
+**6. Publish.** Commit, push, and append one line to `lessons/_review-log.md` with the date
 and what was harvested.
 
 ## Recording an empty pass

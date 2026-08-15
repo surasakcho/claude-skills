@@ -5,8 +5,9 @@ A checker you have never seen fail is an untested checker. This builds deliberat
 figures and tables, runs the screen over them, and asserts each defect class is caught --
 then builds a clean pair and asserts they pass.
 
-    python -X utf8 test_self.py        # exit 0 if the checker behaves
+    python -X utf8 test_self.py        # 0 = checker behaves, 1 = it does not, 2 = cannot run
 """
+import importlib.util
 import subprocess
 import sys
 import tempfile
@@ -14,6 +15,11 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 CHECKER = HERE / "verify_outputs.py"
+REQUIRES = ("matplotlib", "numpy", "pandas")
+
+
+def missing_deps():
+    return [m for m in REQUIRES if importlib.util.find_spec(m) is None]
 
 
 def build(tmp: Path):
@@ -57,6 +63,15 @@ def run(figs, tabs):
 
 
 def main():
+    gone = missing_deps()
+    if gone:
+        # Not a pass. A self-test that cannot run must say so loudly and exit non-zero --
+        # a silent skip is indistinguishable from a green check.
+        print(f"CANNOT RUN: missing {', '.join(gone)}")
+        print(f"  install with: {sys.executable} -m pip install -r "
+              f"{(HERE / 'requirements.txt')}")
+        return 2
+
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
         bad_f, good_f, bad_t, good_t = build(tmp)

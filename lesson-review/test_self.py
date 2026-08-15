@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 """Self-test: prove harvest.py's health check can FAIL.
 
-Builds a deliberately unhealthy shared repo (broken link, rule with no incident, skill with
-no self-test, missing review log) and asserts each is caught; then builds a healthy one and
-asserts it passes.
+Builds a deliberately unhealthy shared repo (broken link, escaping link, rule with no
+incident, skill with no self-test, missing review log, machine path, email, denylisted term)
+and asserts each is caught; then builds a healthy one and asserts it passes.
 
     python -X utf8 test_self.py
+
+leak-scan: fixtures -- the seeded machine paths and email below are deliberate test data.
 """
 import subprocess
 import sys
@@ -24,9 +26,16 @@ def build_bad(root: Path):
     (root / "rules" / "coding" / "vague.md").write_text(
         "# Be careful\n\nAlways write good code. See [the guide](missing-guide.md).\n",
         encoding="utf-8")
-    # A skill with a SKILL.md but no self-test.
+    # A skill with a SKILL.md but no self-test, and a machine path in its example command.
     (root / "skills" / "orphan" / "SKILL.md").write_text(
-        "---\nname: orphan\ndescription: no self-test\n---\n\n# Orphan\n", encoding="utf-8")
+        "---\nname: orphan\ndescription: no self-test\n---\n\n# Orphan\n\n"
+        "    python harvest.py --shared C:/Users/jdoe/Repos/shared\n", encoding="utf-8")
+    # A lesson leaking an email, a private repo name, and a link that walks out of the repo.
+    (root / "lessons" / "leak.md").write_text(
+        "# Leak\n\nAsk jdoe@example.com about it.\n"
+        "Swept `acme-secret-panel` last week.\n"
+        "See [the project rules](../../outside.md).\n", encoding="utf-8")
+    (root.parent / "outside.md").write_text("# Outside the repo\n", encoding="utf-8")
     # No lessons/_review-log.md at all.
 
 
@@ -37,8 +46,10 @@ def build_good(root: Path):
     (root / "rules" / "coding" / "real.md").write_text(
         "# A real rule\n\n## The incident\n\nA guard never fired; cost 30 wrong figures.\n",
         encoding="utf-8")
+    # A placeholder path is how you write a path in shared docs -- it must NOT be a hit.
     (root / "skills" / "solid" / "SKILL.md").write_text(
-        "---\nname: solid\ndescription: has a self-test\n---\n\n# Solid\n", encoding="utf-8")
+        "---\nname: solid\ndescription: has a self-test\n---\n\n# Solid\n\n"
+        "    python harvest.py --shared C:/Users/<name>/Repos/shared\n", encoding="utf-8")
     (root / "skills" / "solid" / "test_self.py").write_text(
         "print('ok')\n", encoding="utf-8")
     from datetime import datetime
@@ -49,7 +60,8 @@ def build_good(root: Path):
 
 def run(shared: Path):
     r = subprocess.run([sys.executable, "-X", "utf8", str(HARVEST),
-                        "--shared", str(shared), "--check"],
+                        "--shared", str(shared), "--check",
+                        "--deny", "acme-secret-panel"],
                        capture_output=True, text=True, encoding="utf-8", errors="replace")
     return r.returncode, r.stdout + r.stderr
 
@@ -65,6 +77,10 @@ def main():
             "detects a rule with no incident": "names no incident" in out,
             "detects a skill with no self-test": "no self-test" in out,
             "detects a missing review log": "_review-log" in out,
+            "detects a link that escapes the repo": "escapes the repo" in out,
+            "detects a machine path": "machine path" in out,
+            "detects an email address": "email address" in out,
+            "detects a denylisted term": "denylisted term" in out,
         }
         good = Path(td) / "good"; good.mkdir(); build_good(good)
         code_ok, out_ok = run(good)

@@ -7,6 +7,7 @@ the rest.
 
     python -X utf8 harvest.py --projects DIR --shared DIR      # harvest candidates
     python -X utf8 harvest.py --shared DIR --check             # health-check the shared repo
+    python -X utf8 harvest.py --shared DIR --check --deny acme-internal,jsmith
     python -X utf8 harvest.py --projects DIR --shared DIR --since 2026-08-01
 
 Exit 1 if the health check finds problems, so it can gate a commit.
@@ -27,6 +28,19 @@ LESSON_FILES = ("LESSONS.md", "DEFECTS.md", "Q-and-A.md", "POSTMORTEM.md", "RETR
 LESSON_GLOBS = ("research/*.md", "docs/lessons/*.md")
 SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "__pycache__", "site-packages",
              ".claude", "dist", "build", ".next"}
+
+# Text the shared repo is scanned for before publishing. A `<placeholder>` segment is how you
+# write a path in shared docs, so it is deliberately not a hit.
+LEAK_PATTERNS = [
+    (r"[A-Za-z]:[\\/]Users[\\/](?!<)[^\s'\"`)\]]+", "machine path (publishes a username)"),
+    (r"/(?:home|Users)/(?!<)[A-Za-z0-9._-]+/[^\s'\"`)\]]*", "machine path (publishes a username)"),
+    (r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "email address"),
+]
+SCAN_SUFFIXES = {".md", ".py", ".sh", ".txt", ".json", ".yml", ".yaml", ".toml"}
+# A self-test that seeds fake leaks must contain fake leaks. Exempt it explicitly, by marker,
+# and report the count -- an exemption nobody can see is a hole, not an exemption.
+# Assembled from two pieces so this file does not exempt ITSELF by merely defining the marker.
+LEAK_EXEMPT_MARKER = "leak-scan" + ": fixtures"
 
 problems = []
 
@@ -124,7 +138,40 @@ def harvest(projects: Path, since: str):
     print("whether it names a real incident with a cost.")
 
 
-def health(shared: Path):
+def scan_leaks(shared: Path, deny: list):
+    """What must not leave a private context: people, places, paths.
+
+    The fourth category -- findings -- is not here on purpose. Only a reader can tell whether
+    a number is a defect count or somebody's unpublished result.
+    """
+    hits = 0
+    exempt = []
+    files = [p for p in shared.rglob("*")
+             if p.is_file() and p.suffix.lower() in SCAN_SUFFIXES
+             and not any(s in p.parts for s in SKIP_DIRS)]
+    for p in files:
+        txt = p.read_text(encoding="utf-8", errors="replace")
+        rel = p.relative_to(shared).as_posix()
+        if LEAK_EXEMPT_MARKER in txt:
+            exempt.append(rel)
+            continue
+        for pattern, label in LEAK_PATTERNS:
+            for m in re.findall(pattern, txt):
+                log_problem(f"{label} in {rel}: {m}")
+                hits += 1
+        for term in deny:
+            if term and term.lower() in txt.lower():
+                log_problem(f"denylisted term '{term}' in {rel}")
+                hits += 1
+    print(f"  scanned {len(files) - len(exempt)} file(s) for leaks; hits: {hits}")
+    for rel in exempt:
+        print(f"    exempt (declared fixtures): {rel}")
+    if not deny:
+        print("    (no --deny terms given: private repo names and collaborator names "
+              "are not being checked)")
+
+
+def health(shared: Path, deny=()):
     print("\n" + "=" * 76)
     print("HEALTH CHECK — the shared repo")
     print("=" * 76)
@@ -136,17 +183,26 @@ def health(shared: Path):
     md = [p for p in shared.rglob("*.md") if ".git" not in p.parts]
     print(f"  {len(md)} markdown file(s)")
 
-    # Internal links must resolve.
-    broken = 0
+    scan_leaks(shared, list(deny))
+
+    # Internal links must resolve -- and must resolve INSIDE the repo. A link that walks out
+    # of the root can pass an existence check by hitting a file on the author's machine, which
+    # is both a broken link for every other reader and a disclosure of the local layout.
+    root = shared.resolve()
+    broken = escaped = 0
     for p in md:
         txt = p.read_text(encoding="utf-8", errors="replace")
         for target in re.findall(r"\]\(([^)#:]+?)(?:#[^)]*)?\)", txt):
             if target.startswith(("http://", "https://", "mailto:")):
                 continue
-            if not (p.parent / target).exists():
+            dest = (p.parent / target).resolve()
+            if not dest.exists():
                 log_problem(f"broken link in {p.relative_to(shared)}: {target}")
                 broken += 1
-    print(f"  broken internal links: {broken}")
+            elif root not in dest.parents and dest != root:
+                log_problem(f"link escapes the repo in {p.relative_to(shared)}: {target}")
+                escaped += 1
+    print(f"  broken internal links: {broken}; links escaping the repo: {escaped}")
 
     # Every rule should name an incident. A rule without a scar is an opinion.
     rules = [p for p in (shared / "rules").rglob("*.md")] if (shared / "rules").exists() else []
@@ -174,9 +230,15 @@ def health(shared: Path):
             r = subprocess.run([sys.executable, "-X", "utf8", str(t)],
                                capture_output=True, text=True, encoding="utf-8",
                                errors="replace", timeout=300)
-            state = "PASS" if r.returncode == 0 else "FAIL"
+            # Exit 2 means the test could not run at all (missing dependencies). That is
+            # still a problem -- a self-test that never executes is not a green check --
+            # but it is a different problem from a checker that behaved wrongly.
+            state = {0: "PASS", 2: "CANNOT RUN"}.get(r.returncode, "FAIL")
             print(f"    self-test {s.name}/{t.name}: {state}")
-            if r.returncode != 0:
+            if r.returncode == 2:
+                log_problem(f"self-test could not run: {s.name}/{t.name} — "
+                            f"{r.stdout.strip().splitlines()[0] if r.stdout.strip() else 'no output'}")
+            elif r.returncode != 0:
                 log_problem(f"self-test failed: {s.name}/{t.name}\n{r.stdout[-800:]}")
 
     # Review cadence.
@@ -203,11 +265,14 @@ def main():
     ap.add_argument("--shared", required=True, help="the shared rules repo")
     ap.add_argument("--since", default=(datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d"))
     ap.add_argument("--check", action="store_true", help="health check only")
+    ap.add_argument("--deny", default="",
+                    help="comma-separated terms that must not appear in the shared repo "
+                         "(private repo names, collaborator names, internal hostnames)")
     args = ap.parse_args()
 
     if args.projects and not args.check:
         harvest(Path(args.projects), args.since)
-    health(Path(args.shared))
+    health(Path(args.shared), [t.strip() for t in args.deny.split(",") if t.strip()])
 
     print("\n" + "=" * 76)
     if problems:

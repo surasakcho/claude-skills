@@ -165,6 +165,7 @@ Skills I use daily for code work.
 - **[domain-modeling](./skills/engineering/domain-modeling/SKILL.md)** — Actively build and sharpen a project's domain model — challenge terms against the glossary, stress-test with edge-case scenarios, and update `CONTEXT.md` and ADRs inline.
 - **[codebase-design](./skills/engineering/codebase-design/SKILL.md)** — Shared discipline and vocabulary for designing deep modules: a lot of behaviour behind a small interface, placed at a clean seam, testable through that interface.
 - **[check-feedback](./check-feedback/SKILL.md)** — Check the current repo's GitHub issues for feedback the owner left, then act on it by following that repo's own feedback pipeline. For a repo's CEO/manager session; defers entirely to the repo's pipeline.
+- **[verify-outputs](./verify-outputs/SKILL.md)** — Review every figure, table and reported number for accuracy, sanity and readability before handing it over. Screens rendered PNG pixels — not the plotting code — for blank output, single-colour dominance, invisible signal and inverted colormaps. Needs [requirements.txt](./verify-outputs/requirements.txt).
 
 ### Productivity
 
@@ -184,6 +185,7 @@ General workflow tools, not code-specific.
 - **[wrap](./wrap/SKILL.md)** — End-of-session ritual: summarize the session, update whatever project logs already exist, then commit and push. Defers to a project's own `wrap` convention if its `CLAUDE.md` defines one.
 - **[wrap-all](./wrap-all/SKILL.md)** — Wrap every repo on the machine with outstanding work in one pass: scans a root directory, then runs the wrap ritual on each dirty or unpushed repo, one at a time.
 - **[global-guidelines](./global-guidelines/SKILL.md)** — Canonical baseline working rules (subagent delegation policy, session discipline) applied on every multi-step task, and synced into a project's or the global `CLAUDE.md` when it's missing or out of date.
+- **[lesson-review](./lesson-review/SKILL.md)** — Weekly pass that sweeps project repos for lessons stranded in one project, publishes the portable ones to [agentic-ai-rules-and-skills](https://github.com/surasakcho/agentic-ai-rules-and-skills), and health-checks what is already shared — including a leak scan for machine paths, emails and private names.
 
 ### Misc
 

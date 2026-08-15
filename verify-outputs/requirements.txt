@@ -1,0 +1,5 @@
+# verify-outputs reads rendered PNGs and CSVs, so these are hard requirements, not extras.
+matplotlib
+numpy
+pandas
+pillow
