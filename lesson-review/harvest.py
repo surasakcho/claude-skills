@@ -241,6 +241,20 @@ def health(shared: Path, deny=()):
             elif r.returncode != 0:
                 log_problem(f"self-test failed: {s.name}/{t.name}\n{r.stdout[-800:]}")
 
+    # Shared library code carries self-tests too. Without this the lib tests exist but never
+    # run in the gate, which is the same as not having them.
+    lib = shared / "lib"
+    if lib.exists():
+        for t in sorted(list(lib.glob("test_*.py")) + list(lib.glob("*self_test*.py"))):
+            r = subprocess.run([sys.executable, "-X", "utf8", str(t)],
+                               capture_output=True, text=True, encoding="utf-8",
+                               errors="replace", timeout=300)
+            state = {0: "PASS", 2: "CANNOT RUN"}.get(r.returncode, "FAIL")
+            print(f"    self-test lib/{t.name}: {state}")
+            if r.returncode != 0:
+                log_problem(f"lib self-test {'could not run' if r.returncode == 2 else 'failed'}"
+                            f": lib/{t.name}\n{r.stdout[-800:]}")
+
     # Review cadence.
     logp = shared / "lessons" / "_review-log.md"
     if not logp.exists():
